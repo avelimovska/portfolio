@@ -1,6 +1,8 @@
 import { defineConfig } from 'astro/config';
 
-// When the site gets a domain, set `site` to it (e.g. 'https://annavelimovska.com').
+// Hosted on GitHub Pages at https://avelimovska.github.io/portfolio/
+// If you move to a custom domain: set `site` to it, remove `base`, and add public/CNAME.
 export default defineConfig({
-  site: 'https://example.com',
+  site: 'https://avelimovska.github.io',
+  base: '/portfolio/',
 });
