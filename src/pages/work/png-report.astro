@@ -1,0 +1,837 @@
+---
+// PNG report redesign case study. Follows the "Case study" page of the Figma file
+// "TI pacific report" (Foundations, Case study, Layouts): same modules, same order.
+// The page uses the report's own look: ink black, signal yellow, Barlow Condensed and Newsreader.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import '@fontsource/barlow-condensed/500.css';
+import '@fontsource/barlow-condensed/600.css';
+import '@fontsource/barlow-condensed/700.css';
+import '@fontsource/newsreader/400.css';
+import '@fontsource/newsreader/500.css';
+import '@fontsource/newsreader/400-italic.css';
+import Base from '../../layouts/Base.astro';
+import Section from '../../components/case/Section.astro';
+import { profile } from '../../data/profile';
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../../assets/png-report/*.png', { eager: true });
+const img = (name: string) => {
+  const f = files[`../../assets/png-report/${name}.png`];
+  if (!f) throw new Error(`Missing image: ${name}.png`);
+  return f.default;
+};
+
+const base = import.meta.env.BASE_URL;
+// Google Drive links to the PDFs. Each button in the hero appears once its link is filled in.
+// The original paper in the World Bank Open Knowledge Repository.
+const original = 'https://openknowledge.worldbank.org/entities/publication/a4f83ff7-fef9-58b0-a52c-1bf83dc37fbb/full';
+const reportLink = 'https://drive.google.com/file/d/1ScW_zG-D2f7PHt6EFT3hxGukbmRCV1pg/view?usp=sharing';
+const factsheetLink = 'https://drive.google.com/file/d/13iInSTqABzOHNi65-fq0DUb_2v1X8yFF/view?usp=sharing';
+
+const before = [
+  ['before-1-cover', 'Original cover: orange, text only'],
+  ['before-2-homicides', 'Original page: homicide graphs in orange frames'],
+  ['before-3-survey', 'Original page: survey and police data in one colour'],
+  ['before-4-arrests', 'Original page: crimes and arrests'],
+];
+
+const palette = [
+  { name: 'Ink', role: 'Police records · text', hex: '#161616', cmyk: '0 0 0 100', ink: '#fff' },
+  { name: 'Signal yellow', role: 'Survey data · the key fact', hex: '#FFD200', cmyk: '0 18 100 0', ink: '#161616' },
+  { name: 'Marker', role: 'Highlight on light text', hex: '#FFF0A0', cmyk: '0 5 45 0', ink: '#161616' },
+  { name: 'Grey 70', role: 'Secondary text, captions', hex: '#4D4D4D', cmyk: '0 0 0 70', ink: '#fff' },
+  { name: 'Grey 30', role: 'Comparison data, rules', hex: '#B3B3B3', cmyk: '0 0 0 30', ink: '#161616' },
+  { name: 'Grey 6', role: 'Panels', hex: '#F0F0F0', cmyk: '0 0 0 6', ink: '#161616' },
+];
+
+const pairs = [
+  {
+    name: 'Cover',
+    before: 'before-1-cover',
+    after: 'page-1',
+    single: true,
+    text: 'A text-only orange cover becomes a map of the seven crime hot spots. The title says what the report is about; the map shows where it happens.',
+  },
+  {
+    name: 'Homicides',
+    before: 'before-2-homicides',
+    after: 'spread-4-5',
+    text: 'Graphs are rebuilt from the paper’s own tables as vector charts. Values and notes sit on the chart instead of in a legend, and the ten-to-one gap between surveys and police is pulled out as a key figure.',
+  },
+  {
+    name: 'Reporting gap',
+    before: 'before-3-survey',
+    after: 'spread-6-7',
+    text: 'The most important number gets a page of its own. The facing page shows the evidence for it: the survey estimate in yellow, police records in black.',
+  },
+  {
+    name: 'Arrests and courts',
+    before: 'before-4-arrests',
+    after: 'spread-8-9',
+    text: 'Crimes reported in grey, arrests in black, so the gap reads at a glance. The court figure, 69 cases, closes the argument on the facing page.',
+  },
+];
+
+const decisions = [
+  ['One idea per spread', 'Each spread answers one question. Headlines state the finding (“Arrest rates have remained consistent and low”), not the topic.'],
+  ['Charts that explain themselves', 'Values and notes sit next to the data. No legends to decode, no 3D, no gridlines that compete with the data.'],
+  ['Colour carries meaning', 'Black is police data, yellow is survey data and the key fact. Nothing is coloured for decoration.'],
+  ['A pause page', '2.3% gets a full page, so a reader who only flips through still leaves with the main finding.'],
+  ['Honest numbers', 'Values read off the original graphs are marked ≈. In the factsheet, figures from different years sit on separate scales.'],
+  ['36 pages to 10 + 3', 'The report fits in 10 pages; a 3-page factsheet carries the key figures for meetings and briefings.'],
+];
+
+const tokens = [
+  ['data/police', 'Ink'],
+  ['data/survey', 'Signal yellow'],
+  ['data/highlight', 'Signal yellow'],
+  ['data/neutral', 'Grey 30'],
+  ['text/primary', 'Ink'],
+  ['text/secondary', 'Grey 70'],
+  ['bg/cover', 'Ink'],
+  ['bg/marker', 'Marker'],
+];
+
+const typeScale = [
+  ['Display/Cover', 'Barlow Condensed Bold', '64 / 58'],
+  ['Display/Giant number', 'Barlow Condensed Bold', '260 / 220'],
+  ['Heading/H1', 'Barlow Condensed SemiBold', '34 / 35'],
+  ['Heading/H2', 'Barlow Condensed Bold, caps', '13 / 16'],
+  ['Body/Lead', 'Newsreader Medium', '14 / 19'],
+  ['Body/Regular', 'Newsreader Regular', '9.5 / 13.5'],
+  ['Callout/Quote', 'Newsreader Medium Italic', '20 / 25'],
+  ['Data/Big number', 'Barlow Condensed Bold', '64 / 58'],
+  ['Data/Chart label', 'Barlow Condensed Medium', '8.5 / 10'],
+  ['Data/Chart annotation', 'Newsreader Italic', '8.5 / 11'],
+  ['Caption/Source', 'Barlow Condensed Regular', '7.5 / 9.5'],
+];
+
+const steps = [
+  ['Edit', 'Read the paper, chose the findings worth a spread and the tables behind them, cut the rest.'],
+  ['Foundations', 'Colour variables, text styles and chart components in Figma.'],
+  ['Layout', 'A4 pages in Affinity: master pages, paragraph styles, charts drawn from the tables.'],
+  ['Print', 'Print-ready PDF with 3 mm bleed and CMYK swatches, plus editable source files.'],
+];
+---
+
+<Base
+  theme="png"
+  title={`PNG crime report · Case study · ${profile.name}`}
+  description="Information design case study: a World Bank research paper on crime in Papua New Guinea rebuilt as a 10-page print report and a 3-page factsheet."
+>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="hero-kicker">Case study · Information design</p>
+      <h1 class="display">Trends in Crime and Violence in Papua New Guinea</h1>
+      <p class="hero-lead">
+        A World Bank research paper rebuilt as a 10-page print report and a 3-page factsheet, around one finding: most
+        crime in Papua New Guinea never reaches the police.
+      </p>
+      {
+        (reportLink || factsheetLink) && (
+          <div class="hero-links">
+            {reportLink && <a class="hero-link" href={reportLink} target="_blank" rel="noopener">Report PDF ↗</a>}
+            {factsheetLink && <a class="hero-link" href={factsheetLink} target="_blank" rel="noopener">Factsheet PDF ↗</a>}
+          </div>
+        )
+      }
+      <dl class="hero-meta">
+        <div><dt>Role</dt><dd>Information design, layout, data visualisation</dd></div>
+        <div><dt>Tools</dt><dd>Figma for the design system, Affinity for the layout</dd></div>
+        <div><dt>Deliverables</dt><dd>10-page report, 3-page factsheet, print-ready PDF</dd></div>
+        <div><dt>Source</dt><dd>World Bank, Lakhani &amp; Willman, 2014. CC BY 3.0 IGO</dd></div>
+      </dl>
+      <Image
+        class="hero-img"
+        src={img('hero')}
+        alt="The redesigned cover with a map of crime hot spots, and the spread with the 2.3% pause page"
+        widths={[800, 1200, 1800]}
+        sizes="(max-width: 1264px) 100vw, 1200px"
+        loading="eager"
+      />
+      <p class="hero-note">Unofficial redesign concept. Not affiliated with or endorsed by The World Bank.</p>
+    </div>
+  </section>
+
+  <!-- 01 · Starting point -->
+  <Section n="01" tone="white" eyebrow="The starting point" title="A 36-page paper where the main finding is buried">
+    <div class="two">
+      <p>
+        “Trends in Crime and Violence in Papua New Guinea” (World Bank, 2014) compares two kinds of evidence: what the
+        police record and what people tell surveyors. The gap between them is the story. In some towns, fewer than 3
+        crimes in 100 ever reach the police.
+      </p>
+      <p>
+        In the original, that gap is hard to see. Every graph sits in the same orange frame, police and survey data
+        share one colour, key numbers are hidden in long paragraphs, and charts rely on legends the reader has to
+        decode.
+      </p>
+    </div>
+    <div class="pages4">
+      {
+        before.map(([name, alt]) => (
+          <figure>
+            <Image src={img(name)} alt={alt} widths={[320, 480, 640]} sizes="(max-width: 760px) 45vw, 280px" />
+          </figure>
+        ))
+      }
+    </div>
+    <p class="note">Original pages: World Bank, Research and Dialogue Series, Paper No. 1 (2014). US Letter, 36 pages. <a href={original} target="_blank" rel="noopener">Read the original ↗</a></p>
+  </Section>
+
+  <!-- 02 · Colour -->
+  <Section n="02" tone="sand" eyebrow="Colour" title="Two sources, two colours">
+    <div class="two">
+      <p>
+        The paper’s argument rests on a contrast between two kinds of evidence, so the palette has exactly two working
+        colours: ink black for police records and signal yellow for victimization surveys. The pairing never changes,
+        so after one page the reader knows which source they are looking at without reading a legend.
+      </p>
+      <p>
+        Yellow has a second job: it is the highlighter. On each spread one number sits on a yellow bar, the fact the
+        page is about. The original orange was a series colour with no meaning in the data. Black plus one process
+        yellow (CMYK 0 18 100 0) is cheap to print and still separates from black in greyscale.
+      </p>
+    </div>
+    <ul class="palette">
+      {
+        palette.map((c) => (
+          <li style={`--c:${c.hex};--ci:${c.ink}`}>
+            <span class="chip">
+              <span class="chip-name">{c.name}</span>
+            </span>
+            <span class="role">{c.role}</span>
+            <span class="code">{c.hex} · CMYK {c.cmyk}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <!-- 03 · Typography -->
+  <Section n="03" tone="white" eyebrow="Typography" title="A condensed headline face and a reading serif">
+    <div class="type">
+      <div>
+        <p class="type-label">Barlow Condensed</p>
+        <p class="spec-num"><span>2.3%</span></p>
+        <p>
+          Headlines, numbers, chart labels. A condensed grotesque with a field-report, signage character: long
+          headlines and large figures fit narrow columns, and the figures stay clear from 260 pt on the pause page down
+          to 8 pt in chart labels.
+        </p>
+      </div>
+      <div>
+        <p class="type-label">Newsreader</p>
+        <p class="spec-serif">Most crime never reaches the police.</p>
+        <p class="spec-note">Police recorded 1,597 of an estimated 68,849 crimes</p>
+        <p>
+          Body text, standfirsts and chart notes. A serif drawn for long reading slows the reader down in the argument,
+          and its italic gives the annotations on the charts the voice of a handwritten note.
+        </p>
+      </div>
+    </div>
+  </Section>
+
+  <!-- 04 · Before and after -->
+  <Section n="04" tone="sand" eyebrow="Before and after" title="What changed, page by page">
+    {
+      pairs.map((p) => (
+        <article class:list={['pair', { single: p.single }]}>
+          <figure class="pair-before">
+            <figcaption>Before</figcaption>
+            <Image src={img(p.before)} alt={`Before: ${p.name}`} widths={[320, 480]} sizes="240px" />
+          </figure>
+          <figure class="pair-after">
+            <figcaption>After</figcaption>
+            <Image
+              src={img(p.after)}
+              alt={`After: ${p.name}`}
+              widths={p.single ? [400, 600] : [700, 1000, 1400]}
+              sizes={p.single ? '260px' : '(max-width: 900px) 100vw, 620px'}
+            />
+          </figure>
+          <div class="pair-text">
+            <h3>{p.name}</h3>
+            <p>{p.text}</p>
+          </div>
+        </article>
+      ))
+    }
+  </Section>
+
+  <!-- 05 · Decisions -->
+  <Section n="05" tone="white" eyebrow="Key decisions" title="Six rules the layout follows">
+    <ol class="rules">
+      {
+        decisions.map(([h, t], i) => (
+          <li>
+            <span class="rule-n">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{h}</h3>
+            <p>{t}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <!-- 06 · All pages -->
+  <Section n="06" tone="dark" eyebrow="The report" title="Ten pages">
+    <p slot="lead">Cover, contents and a guide to the two colours, then one finding per spread, a pause page and the gaps in the data.</p>
+    <div class="spreads">
+      <Image class="sp single" src={img('page-1')} alt="Page 1: cover" widths={[400, 600]} sizes="280px" />
+      <Image class="sp" src={img('spread-2-3')} alt="Pages 2–3: contents, how to read this report, introduction" widths={[700, 1000, 1400]} sizes="(max-width: 900px) 100vw, 560px" />
+      <Image class="sp" src={img('spread-4-5')} alt="Pages 4–5: homicides" widths={[700, 1000, 1400]} sizes="(max-width: 900px) 100vw, 560px" />
+      <Image class="sp" src={img('spread-6-7')} alt="Pages 6–7: the 2.3% pause page and the reporting gap" widths={[700, 1000, 1400]} sizes="(max-width: 900px) 100vw, 560px" />
+      <Image class="sp" src={img('spread-8-9')} alt="Pages 8–9: violence and arrests" widths={[700, 1000, 1400]} sizes="(max-width: 900px) 100vw, 560px" />
+      <Image class="sp single" src={img('page-10')} alt="Page 10: conclusion and gaps in data" widths={[400, 600]} sizes="280px" />
+    </div>
+  </Section>
+
+  <!-- 07 · Factsheet -->
+  <Section n="07" tone="sand" eyebrow="Factsheet" title="Three pages for meetings and briefings">
+    <p slot="lead">
+      Page one gives five key figures with a line of context each. Page two is about firearms: the police trend, a
+      survey figure and the share of firearm crime missing from the statistics. Page three follows a case from crime
+      to court and lists the gaps in the data.
+    </p>
+    <div class="spreads fs">
+      <Image class="sp single" src={img('fs-1')} alt="Factsheet page 1: at a glance" widths={[400, 600, 800]} sizes="(max-width: 900px) 100vw, 380px" />
+      <Image class="sp" src={img('fs-2-3')} alt="Factsheet pages 2–3: firearms, and from crime to court" widths={[700, 1000, 1400]} sizes="(max-width: 900px) 100vw, 760px" />
+    </div>
+  </Section>
+
+  <!-- 08 · Design system -->
+  <Section n="08" tone="white" eyebrow="Design system" title="Built in Figma first, then laid out in Affinity">
+    <div class="two">
+      <p>
+        Before any layout, the foundations were set up in Figma: colour variables in two layers (primitives, and
+        semantic roles such as data/police and data/survey), 16 text styles and three chart components: key figure,
+        legend and bar row.
+      </p>
+      <p>
+        The same names were then set up as swatches and paragraph styles in Affinity, on an A4 page with a 6-column grid
+        and 14 pt gutters. The Figma file and the print layout share one vocabulary, so a change is made once and
+        carried over by name.
+      </p>
+    </div>
+    <div class="ds">
+      <div>
+        <p class="type-label">Semantic colour roles</p>
+        <table>
+          <tbody>
+            {tokens.map(([t, v]) => (
+              <tr>
+                <td><code>{t}</code></td>
+                <td>{v}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <p class="type-label">Text styles (pt)</p>
+        <table>
+          <tbody>
+            {typeScale.map(([n, f, s]) => (
+              <tr>
+                <td><code>{n}</code></td>
+                <td>{f}</td>
+                <td class="num">{s}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </Section>
+
+  <!-- 09 · Process -->
+  <Section n="09" tone="sand" eyebrow="Process" title="From a 36-page paper to a print-ready set">
+    <ol class="steps">
+      {
+        steps.map(([h, t], i) => (
+          <li>
+            <span class="rule-n">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{h}</h3>
+            <p>{t}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <!-- Thanks -->
+  <section class="thanks">
+    <div class="wrap">
+      <h2 class="display">Thanks for reading</h2>
+      <p>{profile.name} · {profile.role}</p>
+      <p class="thanks-note">
+        Based on Lakhani, S. and Willman, A. M. (2014).{' '}
+        <a href={original} target="_blank" rel="noopener">Trends in Crime and Violence in Papua New Guinea</a>. Research and
+        Dialogue Series, Paper No. 1. The World Bank. Licensed under{' '}
+        <a href="https://creativecommons.org/licenses/by/3.0/igo/" target="_blank" rel="noopener">CC BY 3.0 IGO</a>. This is
+        an unofficial redesign concept and an adaptation of an original work by The World Bank; it is not endorsed by The
+        World Bank. Values marked ≈ are read from the original graphs.
+      </p>
+      <a class="thanks-back" href={`${base}#work`}>← Back to all work</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  p {
+    margin: 0;
+  }
+  /* Hero: black, like the report cover */
+  .hero {
+    background: var(--ink);
+    color: #fff;
+    padding: clamp(64px, 9vw, 120px) 0 clamp(56px, 7vw, 96px);
+  }
+  .hero-kicker,
+  .type-label,
+  .pair figcaption,
+  .hero-meta dt {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .hero-kicker {
+    color: var(--yellow);
+  }
+  .hero h1 {
+    margin-top: 20px;
+    max-width: 11em;
+    font-size: clamp(48px, 8vw, 112px);
+    line-height: 0.92;
+    text-transform: uppercase;
+  }
+  .hero-lead {
+    margin-top: 28px;
+    max-width: 34em;
+    font-family: var(--font-serif);
+    font-size: clamp(19px, 2vw, 26px);
+    line-height: 1.4;
+    color: #e6e6e6;
+  }
+  .hero-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 32px;
+  }
+  .hero-link {
+    display: inline-block;
+    padding: 14px 22px;
+    background: var(--yellow);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .hero-link:hover {
+    background: #fff;
+  }
+  .hero-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px 32px;
+    margin: 48px 0 0;
+  }
+  .hero-meta div {
+    padding-top: 14px;
+    border-top: 1px solid #4d4d4d;
+  }
+  .hero-meta dt {
+    color: var(--yellow);
+    font-size: 13px;
+  }
+  .hero-meta dd {
+    margin: 6px 0 0;
+    font-family: var(--font-serif);
+    font-size: 17px;
+    line-height: 1.45;
+    color: #e6e6e6;
+  }
+  .hero :global(.hero-img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: clamp(48px, 6vw, 80px);
+  }
+  .hero-note {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #8c8c8c;
+  }
+
+  .two {
+    display: grid;
+    gap: 24px 56px;
+    font-family: var(--font-serif);
+    font-size: clamp(17px, 1.4vw, 19px);
+    line-height: 1.65;
+    color: var(--ink-2);
+  }
+  @media (min-width: 900px) {
+    .two {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .note a {
+    color: inherit;
+  }
+  .note {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-3);
+  }
+
+  /* Original pages */
+  .pages4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(12px, 2.4vw, 32px);
+  }
+  .pages4 figure {
+    margin: 0;
+  }
+  .pages4 :global(img),
+  .pair :global(img),
+  .spreads :global(.sp) {
+    display: block;
+    width: 100%;
+    height: auto;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 12px 32px rgb(0 0 0 / 0.1);
+  }
+  @media (max-width: 760px) {
+    .pages4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Palette */
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .palette li {
+    display: grid;
+    gap: 8px;
+  }
+  .chip {
+    display: flex;
+    align-items: flex-end;
+    aspect-ratio: 4 / 3;
+    padding: 14px;
+    background: var(--c);
+    color: var(--ci);
+    border: 1px solid rgb(0 0 0 / 0.08);
+  }
+  .chip-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .role {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .code {
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+
+  /* Typography */
+  .type {
+    display: grid;
+    gap: 56px;
+  }
+  @media (min-width: 900px) {
+    .type {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .type > div {
+    display: grid;
+    gap: 20px;
+    align-content: start;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .type-label {
+    color: var(--ink-3);
+    font-size: 13px;
+  }
+  .spec-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(120px, 16vw, 220px);
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .spec-num span {
+    background: linear-gradient(transparent 52%, var(--yellow) 52%, var(--yellow) 88%, transparent 88%);
+  }
+  .spec-serif {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(36px, 4.6vw, 60px);
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .spec-note {
+    font-style: italic;
+    font-size: 20px;
+    color: var(--ink);
+  }
+
+  /* Before / after */
+  .pair {
+    display: grid;
+    gap: 24px 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+  .pair figure {
+    margin: 0;
+  }
+  .pair figcaption {
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+  .pair-after figcaption {
+    color: var(--ink);
+  }
+  .pair-text h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 1.1;
+  }
+  .pair-text p {
+    margin-top: 12px;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  @media (min-width: 900px) {
+    .pair {
+      grid-template-columns: 200px minmax(0, 1fr) 280px;
+      align-items: start;
+    }
+    .pair.single {
+      grid-template-columns: 200px 200px minmax(0, 1fr);
+    }
+    .pair-text {
+      padding-top: 26px;
+    }
+  }
+  @media (max-width: 899px) {
+    .pair-before {
+      max-width: 220px;
+    }
+    .pair.single .pair-after {
+      max-width: 220px;
+    }
+  }
+
+  /* Rules and steps */
+  .rules,
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 40px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rules li,
+  .steps li {
+    padding-top: 20px;
+    border-top: 2px solid var(--ink);
+  }
+  .rule-n {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 1;
+  }
+  .rules h3,
+  .steps h3 {
+    margin-top: 12px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 26px;
+    line-height: 1.15;
+  }
+  .rules p,
+  .steps p {
+    margin-top: 10px;
+    font-family: var(--font-serif);
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  /* Spreads */
+  .spreads {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 40px);
+    align-items: start;
+  }
+  .spreads :global(.sp.single) {
+    width: 50%;
+    justify-self: end;
+  }
+  .spreads :global(.sp.single:last-child) {
+    justify-self: start;
+  }
+  .spreads.fs {
+    grid-template-columns: 1fr 2fr;
+  }
+  .spreads.fs :global(.sp.single) {
+    width: 100%;
+  }
+  @media (max-width: 760px) {
+    .spreads,
+    .spreads.fs {
+      grid-template-columns: 1fr;
+    }
+    .spreads :global(.sp.single) {
+      width: 60%;
+      justify-self: center;
+    }
+  }
+
+  /* Design system tables */
+  .ds {
+    display: grid;
+    gap: 48px;
+  }
+  @media (min-width: 900px) {
+    .ds {
+      grid-template-columns: 2fr 3fr;
+    }
+  }
+  .ds table {
+    width: 100%;
+    margin-top: 12px;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+  .ds td {
+    padding: 10px 12px 10px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    vertical-align: top;
+  }
+  .ds code {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .ds .num {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* Thanks */
+  .thanks {
+    padding: clamp(80px, 10vw, 140px) 0;
+    background: var(--ink);
+    color: #fff;
+  }
+  .thanks h2 {
+    font-size: clamp(40px, 6vw, 72px);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .thanks p {
+    margin-top: 16px;
+    max-width: 760px;
+    font-family: var(--font-serif);
+    font-size: 17px;
+    line-height: 1.6;
+    color: #cfcfcf;
+  }
+  .thanks .thanks-note {
+    font-size: 14px;
+    color: #8c8c8c;
+  }
+  .thanks a {
+    color: inherit;
+  }
+  .thanks-back {
+    display: inline-block;
+    margin-top: 32px;
+    font-weight: 600;
+    color: var(--yellow) !important;
+    text-decoration: none;
+  }
+</style>
+
+<style is:global>
+  .theme-png {
+    --bg: #ffffff;
+    --sand: #f2f2ef;
+    --ink: #161616;
+    --ink-2: #3d3d3d;
+    --ink-3: #6b6b6b;
+    --line: #dcdcdc;
+    --accent: #161616;
+    --yellow: #ffd200;
+    --wrap: 1160px;
+
+    --font-display: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Newsreader', Georgia, serif;
+    --display-weight: 600;
+    --display-tracking: -0.01em;
+    color-scheme: light;
+  }
+  .theme-png .site-header {
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  /* Section modules in the report's type: condensed kicker, yellow number badge, serif lead */
+  .theme-png .band .kicker {
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--ink-3);
+  }
+  .theme-png .band.tone-dark .kicker {
+    color: var(--yellow);
+  }
+  .theme-png .band .n {
+    background: var(--yellow);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 13px;
+  }
+  .theme-png .band .lead {
+    font-family: var(--font-serif);
+  }
+  .theme-png .band.tone-dark {
+    --band: #161616;
+  }
+</style>

@@ -1,0 +1,181 @@
+---
+import '../styles/global.css';
+import { profile } from '../data/profile';
+
+interface Props {
+  title?: string;
+  description?: string;
+  // Set on a project page: the page uses that project's own look (see `.theme-<name>` in the page)
+  // and gets a simple header with a way back to the portfolio instead of the portfolio nav.
+  theme?: string;
+}
+
+const {
+  title = `${profile.name} · ${profile.role}`,
+  description = profile.headline,
+  theme,
+} = Astro.props;
+const base = import.meta.env.BASE_URL;
+const year = new Date().getFullYear();
+const { links } = profile;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <!-- Keep the site out of search results: it is shared by direct link only. -->
+    <meta name="robots" content="noindex" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+    <script is:inline>
+      try {
+        const t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+  </head>
+  <body class:list={[theme && `project theme-${theme}`]}>
+    <header class="site-header">
+      <div class="wrap bar">
+        {
+          theme ? (
+            <a class="back-home" href={`${base}#work`}>
+              ← Portfolio
+            </a>
+          ) : (
+            <nav>
+              <a href={`${base}#work`}>Work</a>
+              <a href={`${base}#about`}>About</a>
+              {links.email && <a href={`mailto:${links.email}`}>Contact</a>}
+              <button class="theme" type="button" aria-label="Switch between light and dark">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" />
+                </svg>
+              </button>
+            </nav>
+          )
+        }
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap foot">
+        <span>© {year} {profile.name}</span>
+        {
+          !theme && (
+            <span class="foot-links">
+              {links.email && <a href={`mailto:${links.email}`}>Email</a>}
+              {links.linkedin && <a href={links.linkedin} target="_blank" rel="noopener">LinkedIn</a>}
+              {links.behance && <a href={links.behance} target="_blank" rel="noopener">Behance</a>}
+            </span>
+          )
+        }
+      </div>
+    </footer>
+
+    <script is:inline>
+      document.querySelector('.theme')?.addEventListener('click', () => {
+        const root = document.documentElement;
+        const current =
+          root.dataset.theme ||
+          (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem('theme', next);
+        } catch (e) {}
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 90%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 64px;
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  nav a,
+  .back-home {
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  nav a:hover,
+  .back-home:hover {
+    color: var(--ink);
+  }
+  .back-home {
+    margin-right: auto;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .theme {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    margin-left: -4px;
+    border: 0;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .theme:hover {
+    color: var(--ink);
+  }
+  .site-footer {
+    border-top: 1px solid var(--line);
+  }
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 24px;
+    padding-bottom: 32px;
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+  .foot-links {
+    display: flex;
+    gap: 20px;
+  }
+  .foot-links a {
+    text-decoration: none;
+  }
+  .foot-links a:hover {
+    color: var(--ink);
+  }
+  @media (max-width: 640px) {
+    nav {
+      gap: 20px;
+    }
+  }
+</style>

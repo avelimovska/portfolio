@@ -1,0 +1,55 @@
+---
+// An image that zooms a little on hover and opens full size in the lightbox on click.
+// Images with the same `group` can be browsed with the arrow keys in the lightbox.
+import { Image, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  widths?: number[];
+  sizes?: string;
+  group?: string;
+  class?: string;
+  loading?: 'lazy' | 'eager';
+  caption?: boolean; // show the alt text under the image in the lightbox
+}
+
+const { src, alt, widths = [480, 960], sizes = '480px', group = 'case', class: cls, loading = 'lazy', caption = true } = Astro.props;
+const full = await getImage({ src, width: Math.min(src.width, 2000), format: 'webp' });
+---
+
+<button type="button" class:list={['zoom', cls]} data-full={full.src} data-group={group} data-alt={alt} data-caption={String(caption)} aria-label={`Open larger: ${alt}`}>
+  <Image src={src} alt={alt} widths={widths.filter((w) => w <= src.width)} sizes={sizes} loading={loading} />
+</button>
+
+<style>
+  .zoom {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+    border-radius: 18px;
+  }
+  .zoom :global(img) {
+    width: 100%;
+    transition:
+      transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+      filter 0.45s ease;
+    will-change: transform;
+  }
+  .zoom:hover :global(img),
+  .zoom:focus-visible :global(img) {
+    transform: scale(var(--zoom-scale, 1.04));
+    filter: drop-shadow(0 24px 40px rgb(3 7 18 / 0.18));
+  }
+  @media (hover: none) {
+    .zoom:hover :global(img) {
+      transform: none;
+      filter: none;
+    }
+  }
+</style>

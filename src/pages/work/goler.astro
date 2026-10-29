@@ -1,0 +1,1708 @@
+---
+// Goler case study. Built to follow the "Case study" page of the Figma file
+// "Goler: Product Design": same modules, same order, same band colors and type.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Base from '../../layouts/Base.astro';
+import Section from '../../components/case/Section.astro';
+import Notes from '../../components/case/Notes.astro';
+import Shots from '../../components/case/Shots.astro';
+import Wide from '../../components/case/Wide.astro';
+import Zoom from '../../components/case/Zoom.astro';
+import Compare from '../../components/case/Compare.astro';
+import { profile } from '../../data/profile';
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../../assets/goler-shots/*.png', { eager: true });
+const img = (name: string) => {
+  const f = files[`../../assets/goler-shots/${name}.png`];
+  if (!f) throw new Error(`Missing image: ${name}.png`);
+  return f.default;
+};
+
+const base = import.meta.env.BASE_URL;
+
+const links = {
+  site: 'https://goler.co',
+  appStore: 'https://apps.apple.com/app/id6784463175',
+  googlePlay: 'https://play.google.com/store/apps/details?id=co.goler.app&hl=en',
+};
+
+// Problem module data (Goler data, Batumi, 2026). From 4.5★ down the bars turn brand pink.
+const ratingRisk: [string, number][] = [
+  ['5.0', 0.5], ['4.9', 0.9], ['4.8', 2.5], ['4.7', 3.3], ['4.6', 5.9], ['4.5', 9.0],
+  ['4.4', 11.8], ['4.3', 16.2], ['4.2', 17.6], ['4.1', 18.2], ['4.0', 15.7],
+];
+const maxRisk = 20;
+
+const examples = [
+  { name: 'Amberleaf', stars: '4.5', risk: 25, note: 'Minor: isolated complaints' },
+  { name: 'Dough & Herb+', stars: '4.6', risk: 31, note: 'Caution: recurring hygiene mentions' },
+  { name: 'Indigo Tusk', stars: '4.4', risk: 47, note: 'Caution: food poisoning reports' },
+];
+
+// Chapter bar under the header: section id → label.
+const chapters = [
+  ['problem', 'Problem'],
+  ['approach', 'Approach'],
+  ['app', 'App'],
+  ['website', 'Website'],
+  ['venue-hub', 'Venue Hub'],
+  ['admin', 'Admin'],
+  ['system', 'Design system'],
+  ['outcome', 'Outcome'],
+];
+
+// Callout markers on the venue page screen, in % of the image (from the Figma frame).
+const hotspots = [
+  { x: 90.6, y: 19.1 },
+  { x: 90.6, y: 36.6 },
+  { x: 90.6, y: 49.8 },
+  { x: 90.6, y: 69.5 },
+  { x: 73.9, y: 94.7 },
+];
+
+// Goler score tokens: score/risk-1 … score/risk-5
+const zones = [
+  { label: '0–20 Clean', color: '#e5e7eb' },
+  { label: '20–40 Minor', color: '#fcd34d' },
+  { label: '40–60 Caution', color: '#eab308' },
+  { label: '60–80 Problems', color: '#d4628e' },
+  { label: '80+ Critical', color: '#bf0056' },
+];
+---
+
+<Base
+  theme="goler"
+  title={`Goler · Case study · ${profile.name}`}
+  description="Product design case study: a travel app, a website, a venue dashboard and an admin console that turn thousands of reviews into a Risk score, a Quality score and one verdict."
+>
+  <script is:inline>document.documentElement.classList.add('js');</script>
+
+  <!-- 01 · Hero -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-text">
+        <svg class="logo" viewBox="0 0 190 52" role="img" aria-label="Goler"><g fill="currentColor"><path d="M140.469 51.1875L155.382 0H176.301C183.522 0 185.863 4.35218 183.327 13.0565L180.821 21.6619C179.063 27.6956 176.187 31.6522 172.193 33.5315L174.67 51.1875H162.989L160.794 34.6443H155.995L151.175 51.1875H140.469ZM159.388 22.9973H169.048C169.5 22.9973 169.804 22.7253 169.963 22.1813L172.794 12.4631C172.953 11.919 172.806 11.647 172.355 11.647H162.695L159.388 22.9973Z"/><path d="M106.268 51.1875L121.181 0H150.497L147.103 11.647H128.349L126.122 19.2881H143.057L139.663 30.935H122.729L120.222 39.5405H138.977L135.583 51.1875H106.268Z"/><path d="M79.3955 51.1875L94.3087 0H104.631L93.1107 39.5405H104.775L101.382 51.1875H79.3955Z"/><path d="M44.1126 38.131L51.4179 13.0565C53.9539 4.35218 58.7053 0 65.6723 0H78.9726C85.9396 0 88.1551 4.35218 85.6192 13.0565L78.3138 38.131C75.7778 46.8354 71.0264 51.1875 64.0595 51.1875H50.7591C43.7921 51.1875 41.5767 46.8354 44.1126 38.131ZM54.2713 38.7244C54.1129 39.2685 54.2514 39.5405 54.6868 39.5405H66.9183C67.3538 39.5405 67.6508 39.2685 67.8093 38.7244L75.4604 12.4631C75.6189 11.919 75.4805 11.647 75.0451 11.647H62.8134C62.378 11.647 62.0809 11.919 61.9225 12.4631L54.2713 38.7244Z"/><path d="M3.80382 38.131L11.1091 13.0565C13.6451 4.35217 18.6507 0 26.1261 0H49.0616L45.6683 11.647H23.3061C22.8389 11.647 22.5261 11.919 22.3675 12.4631L14.7165 38.7244C14.5579 39.2685 14.7123 39.5405 15.1795 39.5405H27.7302L30.2374 30.935H23.0383L26.4315 19.2881H44.7163L35.4225 51.1875H11.2128C3.73752 51.1875 1.26786 46.8354 3.80382 38.131Z"/></g></svg>
+        <p class="hero-kicker">Case study · Product design</p>
+        <h1 class="display">Verify restaurants. Don't fall into traps!</h1>
+        <p class="hero-lead">
+          A mobile app, a website, a venue dashboard and an admin console that turn thousands of real reviews into a
+          risk and quality score for every venue, so travelers know where to eat before they go.
+        </p>
+        <div class="hero-links">
+          <a class="hero-link primary" href={links.site} target="_blank" rel="noopener">Visit goler.co ↗</a>
+          <a class="hero-link" href={links.appStore} target="_blank" rel="noopener">App Store ↗</a>
+          <a class="hero-link" href={links.googlePlay} target="_blank" rel="noopener">Google Play ↗</a>
+        </div>
+        <p class="hero-note">Goler is a live product. Venue names, addresses, people and reviews shown on the screens are fictional and used for illustration only.</p>
+        <dl class="hero-meta">
+          <div><dt>Role</dt><dd>Product Designer</dd></div>
+          <div><dt>Platform</dt><dd>iOS, Android & Web</dd></div>
+          <div><dt>Year</dt><dd>2026</dd></div>
+        </dl>
+      </div>
+      <div class="hero-visual" data-tilt>
+      <Image
+        class="hero-phones"
+        src={img('cover-phones')}
+        alt="Three Goler screens: search results, Home with the waiter character, and review analysis"
+        widths={[560, 840, 1126]}
+        sizes="(max-width: 900px) 100vw, 580px"
+        loading="eager"
+      />
+      </div>
+    </div>
+  </section>
+
+  <!-- Chapter bar -->
+  <nav class="chapters" aria-label="Case study chapters">
+    <div class="wrap chapters-inner">
+      {chapters.map(([id, label]) => <a href={`#${id}`} data-target={id}>{label}</a>)}
+    </div>
+    <span class="progress" aria-hidden="true"></span>
+  </nav>
+
+  <!-- 02 · At a glance -->
+  <Section tone="white">
+    <dl class="glance-meta">
+      <div><dt>Role</dt><dd>Product Designer</dd></div>
+      <div><dt>Platforms</dt><dd>iOS · Android · Web</dd></div>
+      <div><dt>Products</dt><dd>4 products</dd></div>
+      <div><dt>Pilot city</dt><dd>Batumi, Georgia</dd></div>
+    </dl>
+    <div class="glance">
+      <div>
+        <p class="kicker">What is Goler</p>
+        <h3 class="display glance-title">A travel app that checks a restaurant before you sit down</h3>
+        <div class="glance-text">
+          <p>
+            Goler reads every public review of a venue, in every language, and turns thousands of them into two
+            scores, Risk and Quality, and one verdict: GO, CAUTION or NO-GO. It never republishes reviews. It tells
+            you what keeps going wrong, what people love, and what to order.
+          </p>
+          <p>
+            I designed all four surfaces: the mobile app for travelers, goler.co, the dashboard for venue owners and
+            the internal console that runs the scoring pipeline.
+          </p>
+        </div>
+      </div>
+      <dl class="stat-grid">
+        <div class="stat"><dt class="display" data-count="777" data-suffix="+">777+</dt><dd>venues checked</dd></div>
+        <div class="stat"><dt class="display" data-count="300" data-suffix="K+">300K+</dt><dd>reviews read</dd></div>
+        <div class="stat"><dt class="display" data-count="22" data-suffix="K">22K</dt><dd>dishes indexed</dd></div>
+        <div class="stat"><dt class="display" data-count="4" data-suffix="">4</dt><dd>languages</dd></div>
+      </dl>
+    </div>
+  </Section>
+
+  <!-- 03 · Problem -->
+  <Section id="problem" chapter="Problem" n="01" tone="dark" eyebrow="The problem" title="A 4.5★ tells you nothing about the kitchen">
+    <p slot="lead">
+      A star rating is an average of everything: the view, the music, the price, the waiter's smile. The things that
+      ruin a trip, food poisoning, a padded bill, a dirty restroom, get averaged away. Travelers have one evening in a
+      new city and reviews in five languages they cannot read.
+    </p>
+    <figure class="chart">
+      <figcaption>
+        <strong>Average Risk score of Batumi venues, grouped by their Google rating</strong>
+        <span>
+          Goler data, 2026. Risk 0–100 shows how systematic health and safety signals are in a venue's reviews. From
+          4.5★ down, the average venue already carries recurring risk signals.
+        </span>
+      </figcaption>
+      <div class="bars" role="img" aria-label="Average Risk rises from 0.5 at 5.0 stars to about 18 at 4.1 stars">
+        {
+          ratingRisk.map(([stars, risk]) => (
+            <div class="bar-col" style={`--d:${ratingRisk.findIndex(([s]) => s === stars) * 60}ms`}>
+              <span class="bar-val">{risk.toFixed(1)}</span>
+              <span class:list={['bar', { hot: Number(stars) <= 4.5 }]} style={`height:${(risk / maxRisk) * 100}%`} />
+              <span class="bar-label">{stars}★</span>
+            </div>
+          ))
+        }
+      </div>
+    </figure>
+    <div class="examples">
+      {
+        examples.map((e) => (
+          <div class="example">
+            <p class="ex-name">{e.name}</p>
+            <div class="ex-row">
+              <div>
+                <span class="ex-v">★ {e.stars}</span>
+                <span class="ex-k">Google</span>
+              </div>
+              <div>
+                <span class="ex-v risk">{e.risk}</span>
+                <span class="ex-k">Goler Risk</span>
+              </div>
+            </div>
+            <p class="ex-note">{e.note}</p>
+          </div>
+        ))
+      }
+    </div>
+    <p class="footnote">Same stars, very different kitchens. Venue names are fictional; the pattern comes from the real Batumi data.</p>
+  </Section>
+
+  <!-- 04 · Approach -->
+  <Section id="approach" chapter="Approach" n="02" tone="white" eyebrow="The approach" title="Verify, not find">
+    <p slot="lead">
+      Every map and review app helps you find a place. Goler does one job: it checks the place you already have in
+      mind. That single job set the rules for the whole product.
+    </p>
+    <ol class="cards3">
+      <li class="card">
+        <span class="num">01</span>
+        <h3>Evidence over opinion</h3>
+        <p>No republished reviews, no "4.5". Two scores and a verdict, every one of them traceable to the signals behind it.</p>
+      </li>
+      <li class="card">
+        <span class="num">02</span>
+        <h3>Honest about uncertainty</h3>
+        <p>When there are not enough reviews, the app says so. A verdict never claims more than the data allows.</p>
+      </li>
+      <li class="card">
+        <span class="num">03</span>
+        <h3>One job per screen</h3>
+        <p>Home answers "how is this city?", Search answers "which one?", the venue page answers "should I go?". Nothing in between.</p>
+      </li>
+    </ol>
+    <div class="model card">
+      <h3 class="display model-title">Two scores instead of one average</h3>
+      <div class="model-cols">
+        <div>
+          <p class="model-k">Risk · 0–100</p>
+          <p class="model-d">How systematic the warning signals are: food poisoning, hygiene, hidden fees, hostile staff. Not a percentage of bad visits.</p>
+          <ul class="zones">
+            {zones.map((z) => <li><span style={`background:${z.color}`} />{z.label}</li>)}
+          </ul>
+        </div>
+        <div>
+          <p class="model-k">Quality · 0–100</p>
+          <p class="model-d">How visitors actually felt, split into five categories so a great kitchen with slow service is visible as exactly that.</p>
+          <ul class="chips">
+            <li>Food & Drink</li>
+            <li>Service & Staff</li>
+            <li>Cleanliness & Safety</li>
+            <li>Value & Billing</li>
+            <li>Experience & Operations</li>
+          </ul>
+        </div>
+      </div>
+      <p class="verdict">
+        Together they give one verdict: <b class="go">GO</b> <b class="caution">CAUTION</b> <b class="nogo">NO-GO</b>
+      </p>
+    </div>
+  </Section>
+
+  <!-- 05 · Venue page -->
+  <Section id="app" chapter="App" n="03" tone="sand" eyebrow="Solution · Venue page" title={'One screen answers "should I go?"'}>
+    <p slot="lead">
+      The venue page opens on the verdict, not on photos. Risk and Quality sit above the fold with the number of
+      reviews behind them; the category breakdown explains the trade-off; one swipe opens the evidence.
+    </p>
+    <div class="annotated">
+      <div class="annotated-phone">
+        <Image src={img('venue-phone')} alt="Venue page of Lazurna House with five numbered callouts" widths={[420, 840]} sizes="420px" loading="lazy" />
+        {hotspots.map((h, i) => (
+          <button type="button" class="hotspot" data-spot={i} style={`left:${h.x}%;top:${h.y}%`} aria-label={`Callout ${i + 1}`} />
+        ))}
+      </div>
+      <ol class="callouts" data-callouts>
+        <li><b>Name, type, price range and a one-line description</b><span>Enough to confirm it is the right place. "See more" hides the rest.</span></li>
+        <li><b>Hours and the three things you do next</b><span>Open or closed right now; Menu, Location and Contacts as actions, not tabs.</span></li>
+        <li><b>Risk and Quality side by side</b><span>Two numbers with the review count behind them. Color comes from the zone, not from the brand.</span></li>
+        <li><b>Category breakdown</b><span>Food, Service, Cleanliness, Value, Experience: each scored only on the reviews that mention it.</span></li>
+        <li><b>"Review analysis" is one swipe away</b><span>The evidence lives on the next screen, so the first one stays readable at a glance.</span></li>
+      </ol>
+    </div>
+    <div class="pair">
+      <Zoom src={img('venue-score')} alt="Score card: Risk and Quality, the review count, and a breakdown by category" widths={[568, 1136]} sizes="(max-width: 760px) 100vw, 568px" />
+      <Zoom src={img('venue-analysis')} alt="Review analysis: the verdict in one sentence, then the top risks and concerns" widths={[568, 1136]} sizes="(max-width: 760px) 100vw, 568px" />
+    </div>
+  </Section>
+
+  <!-- 06 · Home before and after -->
+  <Section n="04" tone="white" eyebrow="Iteration · Home" title="Home, before and after">
+    <p slot="lead">
+      The first Home opened with three category doors and a link to the scoring methodology. The redesign puts the
+      main action first, checking a venue, and gives the brand a face.
+    </p>
+    <div class="ba">
+      <Compare before={img('home-before-phone')} after={img('home-after-phone')} beforeLabel="Before · June 2026" afterLabel="After · today" />
+      <Notes stack
+      items={[
+        {
+          label: 'Before · what worked, what did not',
+          text: [
+            '+ Three category circles showed the scope at a glance: apartments, food, hotels.',
+            '+ The methodology link was on the first screen.',
+            '− Two of the three circles were locked, so most of the hero promised what was not there yet.',
+            '− No search: the main action, checking a venue, was missing from Home.',
+            '− Insights were bare facts ("69% of venues have their menu available on Goler") with no benefit for the traveler.',
+            '− The contest card brought App Store rejections over contest rules (guidelines 2.3.6 and 5.3.2).',
+          ],
+        },
+        {
+          label: 'After · what works, what it costs',
+          text: [
+            '+ Search sits in the hero, labelled "Check a venue": verify, not find.',
+            '+ Insights lead with the promise and keep the number as proof: "5% of venues here have food poisoning reports. We tell you which ones."',
+            '+ The waiter character gives the brand a face and can change per city: a local hat, a local dish.',
+            '− The illustration takes the top of the screen and pushes the numbers down.',
+            '− Only food is shown; the other categories are no longer visible on Home.',
+            "− The methodology link left Home. The explanation now sits next to a venue's score, where the question comes up.",
+          ],
+        },
+      ]}
+    />
+    </div>
+  </Section>
+
+  <!-- 07 · Evidence -->
+  <Section n="05" tone="sand" eyebrow="Solution · Evidence" title="Show the receipts">
+    <p slot="lead">
+      A score nobody can check is just another opinion. Behind every verdict the app shows what the reviews actually
+      say: the five most frequent risks, the five most frequent concerns, every signal with its count, and practical
+      tips extracted from the same text.
+    </p>
+    <Notes
+      items={[
+        { label: 'Problem', text: 'Travelers did not trust a number they could not trace, and venue owners could not argue with it either.' },
+        { label: 'Decision', text: 'Verdict first, then a ranked list of risks and concerns, then the full signal list with counts. Reviews themselves are never shown, only what they add up to.' },
+      ]}
+    />
+    <Shots
+      max={330}
+      shots={[
+        { src: img('evidence-1'), alt: 'Verdict plus top 5 risks and concerns' },
+        { src: img('evidence-2'), alt: 'All signals with counts' },
+        { src: img('evidence-3'), alt: 'Tips: what to expect, how to prepare, who it is for' },
+      ]}
+    />
+  </Section>
+
+  <!-- 08 · Explainer before and after -->
+  <Section n="06" tone="white" eyebrow="Iteration · Explaining the score" title="From a wall of text to a scale you can read">
+    <p slot="lead">
+      The first app had no explanation of the scores at all. On 1 May a single text modal shipped together with the
+      methodology page on goler.co. Four days later it was rebuilt into two steps, one score each.
+    </p>
+    <div class="ba">
+      <Compare before={img('explainer-v1-phone')} after={img('explainer-v2-phone')} beforeLabel="V1 · 1 May" afterLabel="V2 · 5 May" />
+      <Notes stack
+      items={[
+        {
+          label: 'V1 · 1 May · what worked, what did not',
+          text: [
+            '+ Shown automatically on the first visit to the venue list, and again whenever the copy changes.',
+            '+ It separated the two scores: Risk and Quality answer different questions.',
+            '− Text only: no scale and no example, so a number like 57 stayed abstract.',
+            '− Quality was described as "aggregate visitor satisfaction across all ratings", close to the average rating the product argues against.',
+            '− No way to the full methodology from the app.',
+          ],
+        },
+        {
+          label: 'V2 · 5 May · what works, what it costs',
+          text: [
+            '+ Two steps, one score each, with a "1 of 2" indicator.',
+            '+ A worked example: a score on a five-zone color scale with a marker.',
+            '+ Risk zones spelled out, 0–20 Clean to 80+ Critical, each with one line of meaning.',
+            '+ Quality broken down into its five axes, and a link to the full methodology.',
+            '− Longer: two screens to read before the first results.',
+          ],
+        },
+      ]}
+    />
+    </div>
+  </Section>
+
+  <!-- 09 · Explain the score -->
+  <Section n="07" tone="sand" eyebrow="Solution · Understanding" title="Explain the score once, then get out of the way">
+    <p slot="lead">
+      The explainer is shown once, on the first visit, and again only when its copy changes. Everywhere else the
+      scores speak for themselves.
+    </p>
+    <Notes
+      items={[
+        { label: 'Problem', text: 'Risk was read as a probability. The city-wide "concerns" number on Home was confused with a venue\'s Risk score.' },
+        { label: 'Decision', text: 'Risk is explained as how systematic the signals are, with five color zones and a real example. The city metric got its own name, its own place on Home and its own copy, so it never looks like a venue score.' },
+      ]}
+    />
+    <div class="split">
+      <Zoom src={img('explain-phones')} alt="How Risk works and How Quality works, the two steps of the explainer" widths={[632, 1264]} sizes="(max-width: 760px) 100vw, 632px" />
+      <Zoom src={img('explain-right')} alt="Traveler concerns in Batumi as a separate city metric on Home, and a venue page with not enough reviews for analysis" widths={[480, 960]} sizes="(max-width: 760px) 100vw, 480px" />
+    </div>
+  </Section>
+
+  <!-- 10 · Search -->
+  <Section n="08" tone="white" eyebrow="Solution · Search" title="Start from the verdict, not from the map">
+    <p slot="lead">
+      Search is where people compare. Every result card carries Risk and Quality, distance and price, so the shortlist
+      is already filtered by what matters.
+    </p>
+    <Notes
+      items={[
+        { label: 'Before', text: 'Tapping search on Home opened a modal that duplicated the Search screen. The placeholder said "Search venues", the same promise as every map app.' },
+        { label: 'After', text: 'One tap opens the Search tab with the field already focused. The placeholder says "Check a venue". Filters cover place type, dietary preferences, price and sorting by Risk or Quality.' },
+      ]}
+    />
+    <Shots
+      max={256}
+      shots={[
+        { src: img('search-1'), alt: 'Home: Check a venue' },
+        { src: img('search-2'), alt: 'Results with Risk and Quality' },
+        { src: img('search-3'), alt: 'Sort by risk or quality' },
+        { src: img('search-4'), alt: 'Dietary preferences' },
+      ]}
+    />
+  </Section>
+
+  <!-- 11 · AI search -->
+  <Section n="09" tone="dark" eyebrow="Experiment · AI search" title="An assistant that behaves like a filter. Shipped, then cut">
+    <p slot="lead">
+      The first version was a separate chat assistant. It was rebuilt as "AI search": a mode inside Search that asks
+      for the missing pieces one at a time and returns ordinary result cards. Then real usage answered the question the
+      design could not.
+    </p>
+    <Notes
+      items={[
+        { label: 'Problem', text: 'A free-form chat put the burden on the traveler: what to type, how specific to be, what to do with a paragraph of text.' },
+        { label: 'Decision', text: 'Slot filling. One sentence in, then the app asks for what it still needs: district, cuisine, dish. Results come back as the same cards as regular search, with Risk and Quality on each.' },
+      ]}
+    />
+    <Shots
+      max={256}
+      shots={[
+        { src: img('ai-1'), alt: 'Describe the evening' },
+        { src: img('ai-2'), alt: 'The app asks for the missing piece' },
+        { src: img('ai-3'), alt: 'Searching' },
+        { src: img('ai-4'), alt: 'Checked results, same cards' },
+      ]}
+    />
+    <div class="result">
+      <p class="result-label">Result</p>
+      <p>Not one real user opened AI search, so it was removed from the app. It stays in this case because cutting it was a design decision too.</p>
+    </div>
+  </Section>
+
+  <!-- 12 · Honest states -->
+  <Section n="10" tone="sand" eyebrow="Solution · Edge cases" title="When the data is thin, say so">
+    <p slot="lead">
+      A trust product cannot bluff. Every part of the app has designed states for loading, empty, error and "not
+      enough data", and the copy explains why instead of hiding it.
+    </p>
+    <Shots
+      max={200}
+      shots={[
+        { src: img('states-1'), alt: 'Not enough reviews for analysis' },
+        { src: img('states-2'), alt: 'No score yet' },
+        { src: img('states-3'), alt: 'No places found' },
+        { src: img('states-4'), alt: 'Location not shared' },
+        { src: img('states-5'), alt: 'Failed to load' },
+      ]}
+    />
+  </Section>
+
+  <!-- 13 · Reviews -->
+  <Section n="11" tone="white" eyebrow="Solution · Feedback" title="Feedback without pretending">
+    <p slot="lead">
+      A star and a text box ask people to perform. Most of them pick 5, a few vent. Goler asks what actually stood
+      out, per axis, and lets the app do the writing.
+    </p>
+    <Notes
+      items={[
+        { label: 'Problem', text: 'Free-text reviews are hard to write and even harder to score consistently. A single star hides what was good and what was wrong.' },
+        { label: 'Decision', text: 'Three buckets, Standouts, Recommended, Mixed, each with the same axes the scores use. A visit becomes structured signals from the first tap. Written up in the blog post "How we improved review UX by not asking people to pretend".' },
+      ]}
+    />
+    <Shots
+      shots={[
+        { src: img('reviews-1'), alt: 'Leave a review by axis' },
+        { src: img('reviews-2'), alt: 'Add photos' },
+        { src: img('reviews-3'), alt: 'Gallery with moderation status' },
+      ]}
+    />
+  </Section>
+
+  <!-- 14 · Details -->
+  <Section n="12" tone="sand" eyebrow="Solution · Small things" title="Permissions that explain themselves">
+    <p slot="lead">
+      Every system prompt is preceded by a plain-language screen. Location is asked for with the reason and the limit,
+      locale is detected and confirmed, a missing city becomes a request instead of a dead end.
+    </p>
+    <Shots
+      max={256}
+      shots={[
+        { src: img('details-1'), alt: 'Only used for distance, never stored' },
+        { src: img('details-2'), alt: 'Push: deals and places nearby' },
+        { src: img('details-3'), alt: 'Language and currency detected' },
+        { src: img('details-4'), alt: 'City not covered yet? Request it' },
+      ]}
+    />
+  </Section>
+
+  <!-- 15 · Website -->
+  <Section id="website" chapter="Website" n="13" tone="white" eyebrow="Website" title="A new category needs a 10-second explanation">
+    <p slot="lead">
+      goler.co has to do two things: explain in one scroll what a Risk score is, and prove the product shows its work.
+      The landing page carries the first; thirteen secondary pages, from the scoring methodology to the dispute
+      policy, carry the second.
+    </p>
+    <div class="site-row">
+      <Zoom src={img('web-landing')} alt="goler.co landing page on desktop" widths={[844, 1688]} sizes="(max-width: 760px) 100vw, 844px" />
+      <Zoom class="site-phone" src={img('web-phone')} alt="goler.co landing page on mobile" widths={[284, 568]} sizes="(max-width: 760px) 60vw, 284px" />
+    </div>
+    <Notes
+      items={[
+        { label: 'How it works', text: 'An interactive walkthrough: ten steps, each pairing a real app screen with one idea. It replaces a feature list with the product itself.' },
+        { label: 'Showing the work', text: 'Scoring methodology, product policy, dispute and improvement policies, FAQ. A product that publishes negative verdicts has to say exactly how it reaches them and how a venue can respond.' },
+      ]}
+    />
+    <div class="site-row two">
+      <Zoom src={img('web-howitworks')} alt="How it works, step 3 of 10: GO, CAUTION, NO-GO" widths={[760, 1520]} sizes="(max-width: 760px) 100vw, 760px" />
+      <Zoom src={img('web-methodology')} alt="Scoring Methodology page" widths={[368, 736]} sizes="(max-width: 760px) 100vw, 368px" />
+    </div>
+  </Section>
+
+  <!-- 16 · Venue Hub -->
+  <Section id="venue-hub" chapter="Venue Hub" n="14" tone="dark" eyebrow="Venue Hub" title="A verdict is only fair if the venue can act on it">
+    <p slot="lead">
+      Owners see the same signals travelers see, with dates and counts, and two ways to respond: fix it and report the
+      fix, or request expert help. They also run the menu travelers search through, in every guest language, and a
+      public QR menu.
+    </p>
+    <Notes
+      items={[
+        { label: 'Problem', text: 'A business that gets a NO-GO with no path back will fight the verdict instead of the problem.' },
+        { label: 'Decision', text: 'Signals are shown as a to-do list, not a grade. "Report improvement" and "Expert help" sit next to every group of signals, and the score recalculation rules are public.' },
+      ]}
+    />
+    <Wide src={img('hub-main')} alt="Venue Hub: Venue Signals with Improve Your Score, risk signals and quality signals" />
+    <div class="pair">
+      <Zoom src={img('hub-improve')} alt="Venue Hub: Report Improvement form" widths={[568, 1136]} sizes="(max-width: 760px) 100vw, 568px" />
+      <Zoom src={img('hub-menu')} alt="Venue Hub: menu editor with a dish expanded, in four languages" widths={[568, 1136]} sizes="(max-width: 760px) 100vw, 568px" />
+    </div>
+  </Section>
+
+  <!-- 17 · Admin console -->
+  <Section id="admin" chapter="Admin" n="15" tone="sand" eyebrow="Admin console" title="Every verdict is auditable, so the tool had to be too">
+    <p slot="lead">
+      The console runs the scoring pipeline: each venue shows its runs, the sixteen graph steps behind a verdict, the
+      extracted claims with confidence and severity, and the moderation queues for photos, feedback and tickets. 76
+      screens, built on a dense kit of its own.
+    </p>
+    <Wide src={img('admin-main')} alt="Admin console: place detail with localized fields, scores and verdict" />
+    <div class="pair">
+      <Zoom src={img('admin-runs')} alt="Admin console: overview runs for a place" widths={[568, 1136]} sizes="(max-width: 760px) 100vw, 568px" />
+      <Zoom src={img('admin-moderation')} alt="Admin console: photo moderation queue" widths={[568, 1136]} sizes="(max-width: 760px) 100vw, 568px" />
+    </div>
+  </Section>
+
+  <!-- 18 · Design system -->
+  <Section id="system" chapter="Design system" n="16" tone="white" eyebrow="Design system" title="Four products, one system">
+    <p slot="lead">
+      Primitives hold raw values, tokens give them a role, and two modes turn the same component into a light consumer
+      surface or a dark business dashboard. The website and the venue dashboard share one component library; the iOS
+      app keeps its own, in SF Pro.
+    </p>
+    <dl class="stat-grid four">
+      <div class="stat"><dt class="display" data-count="79" data-suffix="">79</dt><dd>semantic tokens, 2 modes</dd></div>
+      <div class="stat"><dt class="display" data-count="110" data-suffix="">110</dt><dd>text styles</dd></div>
+      <div class="stat"><dt class="display" data-count="269" data-suffix="">269</dt><dd>components</dd></div>
+      <div class="stat"><dt class="display" data-count="6" data-suffix="">6</dt><dd>layout grids</dd></div>
+    </dl>
+    <Wide src={img('ds-modes')} alt="The same button component in light mode on goler.co and dark mode in Venue Hub" />
+    <div class="pair">
+      <Zoom src={img('ds-tokens')} alt="Tokens, not colors: bg/brand, bg/screen, text and score tokens" widths={[568, 1136]} sizes="(max-width: 760px) 100vw, 568px" />
+      <Zoom src={img('ds-type')} alt="Two type systems: Inter for web, SF Pro for the iOS app" widths={[568, 1136]} sizes="(max-width: 760px) 100vw, 568px" />
+    </div>
+    <Wide src={img('ds-app')} alt="Mobile app kit: venue page components" />
+    <Wide src={img('ds-hub')} alt="Venue Hub kit in dark mode: foundations, inputs, navigation" caption="Component library: the mobile app kit (light) and the Venue Hub kit (dark) on the Components page." />
+  </Section>
+
+  <!-- 19 · Store assets -->
+  <Section n="17" tone="dark" eyebrow="Launch" title="From Figma to the App Store">
+    <p slot="lead">
+      Five screenshots per store in English, Russian and Turkish, the Google Play feature graphic and the share image
+      for goler.co. The same screens, the same copy principle: promise first, number as proof.
+    </p>
+    <Wide src={img('store-screens')} alt="Five App Store screenshots in English" />
+  </Section>
+
+  <!-- 20 · Outcome -->
+  <Section id="outcome" chapter="Outcome" n="18" tone="white" eyebrow="Outcome" title="Shipped, and built to be argued with">
+    <p slot="lead">
+      iOS and Android apps are live in the App Store and Google Play. goler.co, the venue dashboard and the admin
+      console are in production. Next cities on the public roadmap: Tbilisi and Egypt.
+    </p>
+    <div class="pills">
+      <a class="pill" href={links.site} target="_blank" rel="noopener">goler.co ↗</a>
+      <a class="pill" href={links.appStore} target="_blank" rel="noopener">App Store ↗</a>
+      <a class="pill" href={links.googlePlay} target="_blank" rel="noopener">Google Play ↗</a>
+    </div>
+    <ol class="cards3">
+      <li class="card">
+        <h3>Lead with the promise, prove with the number</h3>
+        <p>"5% of venues here have food poisoning reports. We tell you which ones." The benefit comes first; the figure makes it credible. Every insight on Home follows this order.</p>
+      </li>
+      <li class="card">
+        <h3>Design the "no"</h3>
+        <p>"Not enough reviews" is a first-class screen, not an error. Admitting uncertainty is what makes the confident verdicts believable.</p>
+      </li>
+      <li class="card">
+        <h3>The tool for the accused is part of the product</h3>
+        <p>A verdict without a path to fix it is just a complaint. Venue Hub turned a score into a to-do list and gave the product a second user.</p>
+      </li>
+    </ol>
+  </Section>
+
+  <!-- Lightbox: any screen opens here at full size -->
+  <div class="lb" role="dialog" aria-modal="true" aria-label="Screen preview" hidden>
+    <button type="button" class="lb-btn lb-close" aria-label="Close">✕</button>
+    <button type="button" class="lb-btn lb-prev" aria-label="Previous">←</button>
+    <figure class="lb-fig">
+      <img class="lb-img" alt="" />
+      <figcaption class="lb-cap"></figcaption>
+    </figure>
+    <button type="button" class="lb-btn lb-next" aria-label="Next">→</button>
+  </div>
+
+  <!-- 21 · Thanks -->
+  <section class="thanks">
+    <div class="wrap">
+      <h2 class="display">Thanks for reading</h2>
+      <p>{profile.name} · {profile.role}</p>
+      <p class="thanks-note">Goler is a live product. Venue names, addresses, people and reviews shown on the screens are fictional and used for illustration only.</p>
+      <a class="thanks-back" href={`${base}#work`}>← Back to all work</a>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Reveal headers and blocks as they scroll into view.
+  const revealTargets = document.querySelectorAll<HTMLElement>('[data-reveal], .band .body > *');
+  revealTargets.forEach((el) => el.setAttribute('data-reveal', ''));
+  const io = new IntersectionObserver(
+    (entries) =>
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-in');
+          io.unobserve(e.target);
+        }
+      }),
+    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
+  );
+  revealTargets.forEach((el) => io.observe(el));
+
+  // Count the big numbers up when they appear.
+  const counters = new IntersectionObserver(
+    (entries) =>
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        counters.unobserve(e.target);
+        const el = e.target as HTMLElement;
+        const to = Number(el.dataset.count);
+        const suffix = el.dataset.suffix ?? '';
+        if (reduce) return;
+        const t0 = performance.now();
+        const dur = 1200;
+        const tick = (t: number) => {
+          const k = Math.min(1, (t - t0) / dur);
+          el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + suffix;
+          if (k < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    { threshold: 0.6 },
+  );
+  document.querySelectorAll('[data-count]').forEach((el) => counters.observe(el));
+
+  // Grow the chart bars when the chart is on screen.
+  const bars = document.querySelector('.bars');
+  if (bars) {
+    const bo = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          bars.classList.add('in');
+          bo.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+    bo.observe(bars);
+  }
+
+  // Chapter bar: highlight the chapter on screen and show reading progress.
+  const nav = document.querySelector<HTMLElement>('.chapters');
+  const links = new Map(
+    [...document.querySelectorAll<HTMLAnchorElement>('.chapters a')].map((a) => [a.dataset.target, a]),
+  );
+  // A chapter stays active until the next chapter's section reaches the middle of the screen.
+  const chapterSections = [...document.querySelectorAll<HTMLElement>('section[data-chapter]')];
+  let current = '';
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    nav?.style.setProperty('--p', String(max > 0 ? scrollY / max : 0));
+    let id = '';
+    for (const sec of chapterSections) if (sec.getBoundingClientRect().top < innerHeight * 0.4) id = sec.id;
+    if (id === current) return;
+    current = id;
+    links.forEach((a) => a.classList.remove('active'));
+    const a = links.get(id);
+    if (a) {
+      a.classList.add('active');
+      a.parentElement?.scrollTo({ left: a.offsetLeft - 24, behavior: 'smooth' });
+    }
+  };
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Hero phones follow the pointer a little.
+  const hero = document.querySelector<HTMLElement>('.hero');
+  const tilt = document.querySelector<HTMLElement>('[data-tilt]');
+  if (hero && tilt && !reduce && matchMedia('(hover: hover)').matches) {
+    hero.addEventListener('pointermove', (ev) => {
+      const r = hero.getBoundingClientRect();
+      const x = (ev.clientX - r.left) / r.width - 0.5;
+      const y = (ev.clientY - r.top) / r.height - 0.5;
+      tilt.style.setProperty('--ry', `${x * 10}deg`);
+      tilt.style.setProperty('--rx', `${-y * 8}deg`);
+    });
+    hero.addEventListener('pointerleave', () => {
+      tilt.style.setProperty('--ry', '0deg');
+      tilt.style.setProperty('--rx', '0deg');
+    });
+  }
+
+  // Venue page: the callout list and the numbers on the screen light up together.
+  const items = [...document.querySelectorAll<HTMLElement>('[data-callouts] li')];
+  const spots = [...document.querySelectorAll<HTMLElement>('.hotspot')];
+  let auto: number | undefined;
+  const light = (i: number) => {
+    items.forEach((li, j) => li.classList.toggle('on', j === i));
+    spots.forEach((s, j) => s.classList.toggle('on', j === i));
+  };
+  const stopAuto = () => {
+    if (auto) clearInterval(auto);
+    auto = undefined;
+  };
+  items.forEach((li, i) => li.addEventListener('mouseenter', () => (stopAuto(), light(i))));
+  spots.forEach((s, i) => {
+    s.addEventListener('mouseenter', () => (stopAuto(), light(i)));
+    s.addEventListener('click', () => (stopAuto(), light(i)));
+  });
+  const annotated = document.querySelector('.annotated');
+  if (annotated && items.length) {
+    const ao = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting || auto || reduce) return;
+        let i = 0;
+        light(0);
+        auto = window.setInterval(() => light((i = (i + 1) % items.length)), 2200);
+        ao.disconnect();
+      },
+      { threshold: 0.5 },
+    );
+    ao.observe(annotated);
+  }
+
+  // Lightbox.
+  const lb = document.querySelector<HTMLElement>('.lb')!;
+  const lbImg = lb.querySelector<HTMLImageElement>('.lb-img')!;
+  const lbCap = lb.querySelector<HTMLElement>('.lb-cap')!;
+  let group: HTMLElement[] = [];
+  let idx = 0;
+  let opener: HTMLElement | null = null;
+  const show = (i: number) => {
+    idx = (i + group.length) % group.length;
+    const b = group[idx];
+    lbImg.src = b.dataset.full!;
+    lbImg.alt = b.dataset.alt ?? '';
+    const caption = b.dataset.caption === 'false' ? '' : (b.dataset.alt ?? '');
+    const count = group.length > 1 ? `${idx + 1} / ${group.length}` : '';
+    lbCap.textContent = [caption, count].filter(Boolean).join('  ·  ');
+  };
+  const open = (b: HTMLElement) => {
+    opener = b;
+    group = [...document.querySelectorAll<HTMLElement>(`.zoom[data-group="${CSS.escape(b.dataset.group ?? '')}"]`)];
+    lb.classList.toggle('single', group.length < 2);
+    show(group.indexOf(b));
+    lb.hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => lb.classList.add('open'));
+    lb.querySelector<HTMLElement>('.lb-close')!.focus();
+  };
+  const close = () => {
+    lb.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => (lb.hidden = true), 200);
+    opener?.focus();
+  };
+  document.querySelectorAll<HTMLElement>('.zoom').forEach((b) => b.addEventListener('click', () => open(b)));
+  lb.querySelector('.lb-close')!.addEventListener('click', close);
+  lb.querySelector('.lb-prev')!.addEventListener('click', () => show(idx - 1));
+  lb.querySelector('.lb-next')!.addEventListener('click', () => show(idx + 1));
+  lb.addEventListener('click', (e) => {
+    if (e.target === lb || (e.target as HTMLElement).classList.contains('lb-fig')) close();
+  });
+  addEventListener('keydown', (e) => {
+    if (lb.hidden) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') show(idx - 1);
+    if (e.key === 'ArrowRight') show(idx + 1);
+  });
+</script>
+
+<style>
+  /* ---------- 01 Hero ---------- */
+  .hero {
+    padding: clamp(48px, 7vw, 96px) 0 clamp(32px, 5vw, 72px);
+    background: var(--accent) radial-gradient(110% 90% at 90% 0%, #cf2a72 0%, transparent 62%);
+    color: #fff;
+    overflow: hidden;
+  }
+  .hero-grid {
+    display: grid;
+    gap: 32px;
+    align-items: center;
+  }
+  .logo {
+    display: block;
+    width: 150px;
+    height: auto;
+  }
+  .hero-kicker {
+    margin-top: clamp(32px, 4vw, 56px);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.75);
+  }
+  .hero h1 {
+    margin-top: 16px;
+    font-size: clamp(40px, 5vw, 64px);
+    line-height: 1.05;
+  }
+  .hero-lead {
+    margin-top: 28px;
+    max-width: 34em;
+    font-size: clamp(17px, 1.5vw, 20px);
+    line-height: 1.6;
+    color: rgb(255 255 255 / 0.85);
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 48px;
+    margin: 40px 0 0;
+    padding-top: 24px;
+    border-top: 1px solid rgb(255 255 255 / 0.25);
+  }
+  .hero-meta dt {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.65);
+  }
+  .hero-meta dd {
+    margin: 6px 0 0;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .hero-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 32px;
+  }
+  .hero-link {
+    display: inline-flex;
+    align-items: center;
+    height: 42px;
+    padding: 0 18px;
+    border: 1px solid rgb(255 255 255 / 0.45);
+    border-radius: 999px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
+  }
+  .hero-link:hover {
+    border-color: #fff;
+    background: rgb(255 255 255 / 0.12);
+    transform: translateY(-2px);
+  }
+  .hero-link.primary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--accent);
+  }
+  .hero-link.primary:hover {
+    background: #fff;
+  }
+  :global(.hero-phones) {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ---------- Hero motion ---------- */
+  .hero-visual {
+    perspective: 1200px;
+  }
+  .hero-visual :global(.hero-phones) {
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  :global(html.js) .hero-text > *,
+  :global(html.js) .hero-visual {
+    animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  :global(html.js) .hero-text > :nth-child(2) { animation-delay: 0.06s; }
+  :global(html.js) .hero-text > :nth-child(3) { animation-delay: 0.12s; }
+  :global(html.js) .hero-text > :nth-child(4) { animation-delay: 0.18s; }
+  :global(html.js) .hero-text > :nth-child(5) { animation-delay: 0.24s; }
+  :global(html.js) .hero-text > :nth-child(6) { animation-delay: 0.3s; }
+  :global(html.js) .hero-visual { animation-delay: 0.2s; animation-duration: 1.2s; }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+  }
+
+  /* ---------- Chapter bar ---------- */
+  .chapters {
+    position: sticky;
+    top: 64px;
+    z-index: 9;
+    background: #ffffff;
+    border-bottom: 1px solid var(--line);
+  }
+  .chapters-inner {
+    display: flex;
+    gap: 28px;
+    height: 44px;
+    align-items: center;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chapters-inner::-webkit-scrollbar {
+    display: none;
+  }
+  .chapters a {
+    flex: none;
+    position: relative;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-3);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .chapters a:hover,
+  .chapters a.active {
+    color: var(--accent);
+  }
+  .progress {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    height: 2px;
+    width: calc(var(--p, 0) * 100%);
+    background: var(--accent);
+  }
+
+  /* ---------- Scroll reveal ---------- */
+  :global(html.js [data-reveal]) {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 0.8s ease,
+      transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  :global(html.js [data-reveal].is-in) {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---------- Shared bits ---------- */
+  .kicker {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--kicker, var(--accent));
+  }
+  .card {
+    padding: 28px;
+    border-radius: 20px;
+    background: var(--card);
+    border: 1px solid var(--card-line, transparent);
+  }
+  .cards3 .card,
+  .stat,
+  .example {
+    transition:
+      transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.35s ease;
+  }
+  .cards3 .card:hover,
+  .stat:hover,
+  .example:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px rgb(3 7 18 / 0.08);
+  }
+  .ba {
+    display: grid;
+    gap: 40px;
+    align-items: center;
+  }
+  .cards3 {
+    display: grid;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .cards3 h3 {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .cards3 p {
+    margin-top: 12px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .num {
+    display: block;
+    margin-bottom: 14px;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .pair,
+  .split,
+  .site-row {
+    display: grid;
+    gap: 24px;
+    align-items: start;
+  }
+  .pair :global(img),
+  .split :global(img),
+  .site-row :global(img) {
+    width: 100%;
+  }
+  :global(.site-phone) {
+    max-width: 284px;
+    margin: 0 auto;
+  }
+
+  /* ---------- 02 At a glance ---------- */
+  .glance-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin: 0;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  .glance-meta dt {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .glance-meta dd {
+    margin: 6px 0 0;
+    font-weight: 700;
+  }
+  .glance {
+    display: grid;
+    gap: 40px;
+  }
+  .glance-title {
+    margin-top: 16px;
+    font-size: clamp(26px, 2.6vw, 32px);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .glance-text {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink-2);
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 0;
+    align-content: start;
+  }
+  .stat {
+    padding: 24px;
+    border-radius: 20px;
+    background: var(--card);
+  }
+  .stat dt {
+    font-size: clamp(40px, 4.4vw, 56px);
+    line-height: 1;
+    color: var(--accent);
+  }
+  .stat dd {
+    margin: 10px 0 0;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+
+  /* ---------- 03 Problem ---------- */
+  .chart {
+    margin: 0;
+    padding: clamp(20px, 3vw, 40px);
+    border-radius: 24px;
+    background: var(--card);
+    border: 1px solid var(--card-line);
+  }
+  .chart figcaption {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 52em;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .chart strong {
+    font-size: 17px;
+    color: var(--ink);
+  }
+  .bars {
+    display: grid;
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+    align-items: end;
+    gap: clamp(4px, 1vw, 14px);
+    height: clamp(200px, 22vw, 280px);
+    margin-top: 32px;
+  }
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    height: 100%;
+  }
+  .bar {
+    width: 100%;
+    min-height: 4px;
+    border-radius: 6px;
+    background: #4b5563;
+  }
+  .bar.hot {
+    background: var(--accent);
+  }
+  :global(html.js) .bar {
+    transform: scaleY(0);
+    transform-origin: 50% 100%;
+    transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms);
+  }
+  :global(html.js) .bars.in .bar {
+    transform: none;
+  }
+  .bar-col {
+    transition: opacity 0.2s ease;
+  }
+  .bars:hover .bar-col {
+    opacity: 0.35;
+  }
+  .bars .bar-col:hover {
+    opacity: 1;
+  }
+  .bar-col:hover .bar-val {
+    transform: scale(1.35);
+  }
+  .bar-val {
+    transition: transform 0.2s ease;
+  }
+  .bar-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .bar-label {
+    font-size: 12px;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .examples {
+    display: grid;
+    gap: 24px;
+  }
+  .example {
+    padding: 28px;
+    border-radius: 20px;
+    background: var(--card);
+    border: 1px solid var(--card-line);
+  }
+  .ex-name {
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .ex-row {
+    display: flex;
+    gap: 40px;
+    margin-top: 18px;
+  }
+  .ex-row div {
+    display: flex;
+    flex-direction: column;
+  }
+  .ex-v {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .ex-v.risk {
+    color: #f59e0b;
+  }
+  .ex-k {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .ex-note {
+    margin-top: 18px;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .footnote {
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+
+  /* ---------- 04 Approach ---------- */
+  .model {
+    padding: clamp(24px, 3.4vw, 44px);
+  }
+  .model-title {
+    font-size: clamp(24px, 2.4vw, 30px);
+    letter-spacing: -0.02em;
+  }
+  .model-cols {
+    display: grid;
+    gap: 32px;
+    margin-top: 28px;
+  }
+  .model-k {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .model-d {
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .zones {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .zones span {
+    display: block;
+    height: 10px;
+    margin-bottom: 8px;
+    border-radius: 999px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .chips li {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #fdf2f8; /* bg/brand-subtle */
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .verdict {
+    margin-top: 32px;
+    font-size: 17px;
+    color: var(--ink-2);
+  }
+  .verdict b {
+    margin-left: 10px;
+    font-weight: 900;
+  }
+  .go {
+    color: #16a34a;
+  }
+  .caution {
+    color: #f59e0b;
+  }
+  .nogo {
+    color: var(--accent);
+  }
+
+  /* ---------- 05 Venue page ---------- */
+  .annotated {
+    display: grid;
+    gap: 40px;
+    align-items: start;
+  }
+  .annotated-phone {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .annotated-phone :global(img) {
+    width: 100%;
+  }
+  .hotspot {
+    position: absolute;
+    width: 11%;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+  }
+  .hotspot::after {
+    content: '';
+    position: absolute;
+    inset: -18%;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    opacity: 0;
+    transform: scale(0.7);
+    transition:
+      opacity 0.25s ease,
+      transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .hotspot.on::after {
+    opacity: 1;
+    transform: scale(1);
+    animation: ring 1.4s ease-out infinite;
+  }
+  @keyframes ring {
+    0% { box-shadow: 0 0 0 0 rgb(191 0 86 / 0.45); }
+    100% { box-shadow: 0 0 0 14px rgb(191 0 86 / 0); }
+  }
+  .callouts li {
+    margin: -12px -16px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    cursor: default;
+    transition: background 0.25s ease;
+  }
+  .callouts li.on {
+    background: var(--card);
+  }
+  .callouts {
+    counter-reset: c;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .callouts li {
+    counter-increment: c;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    column-gap: 16px;
+    row-gap: 4px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .callouts li::before {
+    content: counter(c);
+    grid-row: span 2;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .callouts b {
+    font-size: 16px;
+    color: var(--ink);
+  }
+
+  /* ---------- 11 AI search ---------- */
+  .result {
+    padding: 24px 28px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--card-line, transparent);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .result-label {
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #16a34a;
+  }
+
+  /* ---------- 20 Outcome ---------- */
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: -24px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+  .pill:hover {
+    background: #a3004a;
+  }
+
+  /* ---------- 21 Thanks ---------- */
+  .thanks {
+    padding: clamp(120px, 14vw, 200px) 0;
+    background: var(--accent);
+    color: #fff;
+    text-align: center;
+  }
+  .thanks h2 {
+    font-size: clamp(44px, 6.4vw, 80px);
+    line-height: 1;
+  }
+  .thanks p {
+    margin-top: 20px;
+    font-size: clamp(17px, 1.6vw, 20px);
+    color: rgb(255 255 255 / 0.75);
+  }
+  .hero-note {
+    margin-top: 16px;
+    max-width: 46em;
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgb(255 255 255 / 0.7);
+  }
+  .thanks .thanks-note {
+    max-width: 40em;
+    margin: 32px auto 0;
+    font-size: 13px;
+    color: rgb(255 255 255 / 0.65);
+  }
+  .thanks-back {
+    display: inline-block;
+    margin-top: 48px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid rgb(255 255 255 / 0.4);
+  }
+  .thanks-back:hover {
+    border-color: #fff;
+  }
+
+  /* ---------- Lightbox ---------- */
+  .lb {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 64px 1fr 64px;
+    align-items: center;
+    background: rgb(3 7 18 / 0.94);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .lb[hidden] {
+    display: none;
+  }
+  .lb.open {
+    opacity: 1;
+  }
+  .lb-fig {
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    max-height: 100vh;
+    padding: 56px 0 32px;
+  }
+  .lb-img {
+    max-width: 100%;
+    max-height: calc(100vh - 140px);
+    object-fit: contain;
+    transform: scale(0.96);
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .lb.open .lb-img {
+    transform: none;
+  }
+  .lb-cap {
+    font-size: 14px;
+    color: #9ca3af;
+    text-align: center;
+  }
+  .lb-btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto;
+    border: 1px solid rgb(255 255 255 / 0.2);
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.06);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .lb-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .lb-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+  .lb-prev {
+    grid-column: 1;
+  }
+  .lb-next {
+    grid-column: 3;
+  }
+  .lb.single .lb-prev,
+  .lb.single .lb-next {
+    visibility: hidden;
+  }
+
+  @media (max-width: 600px) {
+    .lb {
+      grid-template-columns: 0 1fr 0;
+    }
+    .lb-prev,
+    .lb-next {
+      position: absolute;
+      bottom: 16px;
+    }
+    .lb-prev {
+      left: calc(50% - 56px);
+    }
+    .lb-next {
+      left: calc(50% + 12px);
+    }
+    .lb-fig {
+      padding: 64px 12px 80px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .bar-val,
+    .bar-label {
+      font-size: 9px;
+      letter-spacing: -0.02em;
+    }
+    .bar-col {
+      gap: 4px;
+    }
+  }
+
+  @media (min-width: 760px) {
+    .glance-meta {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .cards3,
+    .examples {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .model-cols {
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+    }
+    .stat-grid.four {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .pair {
+      grid-template-columns: 1fr 1fr;
+    }
+    .split {
+      grid-template-columns: 632fr 480fr;
+      gap: 48px;
+    }
+    .site-row {
+      grid-template-columns: 844fr 284fr;
+      gap: 32px;
+      align-items: end;
+    }
+    .site-row.two {
+      grid-template-columns: 760fr 368fr;
+    }
+  }
+  @media (min-width: 900px) {
+    .ba {
+      grid-template-columns: 340px 1fr;
+      gap: 72px;
+    }
+    .hero-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+    }
+    .glance {
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+    }
+    .annotated {
+      grid-template-columns: 420px 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+  }
+</style>
+
+<style is:global>
+  @media (prefers-reduced-motion: reduce) {
+    html.js [data-reveal],
+    html.js .bar,
+    html.js .hero-text > *,
+    html.js .hero-visual {
+      opacity: 1 !important;
+      transform: none !important;
+      animation: none !important;
+    }
+  }
+  /* Goler's own look for this page, from the Goler design tokens (Light mode). */
+  .theme-goler {
+    --bg: #ffffff;
+    --sand: #f5f5f0; /* bg/screen */
+    --ink: #111827; /* text/primary */
+    --ink-2: #4b5563; /* text/secondary */
+    --ink-3: #6b7280; /* text/tertiary */
+    --line: #e5e7eb; /* border/default */
+    --ok: #16a34a; /* status/success-icon */
+    --accent: #bf0056; /* bg/brand */
+    --wrap: 1160px;
+
+    --font-display: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+    --display-weight: 900; /* Inter Black, as in Web/H1 */
+    --display-tracking: -0.02em;
+    color-scheme: light;
+  }
+  .theme-goler .site-header {
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+</style>

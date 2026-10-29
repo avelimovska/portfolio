@@ -1,0 +1,60 @@
+---
+// A row of phone screens. Desktop: a grid. Phone: a swipeable strip.
+// Each screen zooms on hover and opens in the lightbox on click.
+import type { ImageMetadata } from 'astro';
+import Zoom from './Zoom.astro';
+
+interface Shot {
+  src: ImageMetadata;
+  alt: string;
+}
+interface Props {
+  shots: Shot[];
+  max?: number; // max width of one column in px
+  group?: string;
+}
+const { shots, max = 300, group } = Astro.props;
+const g = group ?? `shots-${shots[0]?.alt ?? ''}`;
+---
+
+<div class="shots" style={`--cols:${shots.length};--max:${max}px`}>
+  {
+    shots.map((s, i) => (
+      <figure style={`--i:${i}`}>
+        <Zoom src={s.src} alt={s.alt} group={g} caption={false} widths={[320, 480, 640]} sizes={`${max}px`} />
+      </figure>
+    ))
+  }
+</div>
+
+<style>
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, var(--max)));
+    justify-content: center;
+    gap: clamp(16px, 3.4vw, 48px);
+  }
+  figure {
+    margin: 0;
+    --zoom-scale: 1.06;
+  }
+  @media (max-width: 760px) {
+    .shots {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      margin: 0 calc(var(--gutter) * -1);
+      padding: 0 var(--gutter) 8px;
+      scrollbar-width: none;
+    }
+    .shots::-webkit-scrollbar {
+      display: none;
+    }
+    figure {
+      flex: 0 0 72%;
+      max-width: 280px;
+      scroll-snap-align: center;
+    }
+  }
+</style>

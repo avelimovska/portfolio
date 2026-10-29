@@ -1,0 +1,99 @@
+---
+// Labelled text cards side by side: Problem / Decision, Before / After.
+// Lines starting with "+" or "−" are rendered as a pro/con list.
+interface Note {
+  label: string;
+  text: string | string[];
+}
+interface Props {
+  items: Note[];
+  stack?: boolean; // one column, cards under each other
+}
+const { items, stack = false } = Astro.props;
+---
+
+<div class:list={['notes', { stack }]}>
+  {
+    items.map((n) => (
+      <div class="note">
+        <p class="label">{n.label}</p>
+        {Array.isArray(n.text) ? (
+          <ul>
+            {n.text.map((line) => {
+              const sign = line.trim()[0];
+              const kind = sign === '+' ? 'plus' : sign === '−' || sign === '-' ? 'minus' : '';
+              return (
+                <li class={kind}>
+                  <span class="mark" aria-hidden="true">
+                    {kind === 'plus' ? '+' : kind === 'minus' ? '−' : '•'}
+                  </span>
+                  <span>{line.replace(/^[+−-]\s*/, '')}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p class="text">{n.text}</p>
+        )}
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .notes {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .note {
+    padding: 24px 28px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--card-line, transparent);
+  }
+  .label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ps-label, var(--accent));
+  }
+  .text {
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink-2);
+  }
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  li {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 6px;
+  }
+  .mark {
+    font-weight: 800;
+  }
+  .plus .mark {
+    color: var(--ok);
+  }
+  .minus .mark {
+    color: var(--accent);
+  }
+  @media (min-width: 760px) {
+    .notes:not(.stack) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
